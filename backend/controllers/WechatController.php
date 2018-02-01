@@ -9,11 +9,11 @@
 namespace backend\controllers;
 
 
-use yii\helpers\VarDumper;
-use yii\web\Controller;
 use yii;
+use yii\helpers\VarDumper;
+use common\controller\BackendController;
 
-class WechatController extends Controller
+class WechatController extends BackendController
 {
 
 //    public function beforeAction($action)
@@ -29,71 +29,10 @@ class WechatController extends Controller
     public $enableCsrfValidation = false;
 
 
-    /**
-     * https请求
-     * @param unknown $url
-     * @param string $data
-     * @return mixed
-     */
-    function http_request($url, $data = null, $https = false)
+    public function actionSucai()
     {
-        $curl = curl_init();
-//        $header[] = "Host:api.weixin.qq.com";
-        curl_setopt($curl, CURLOPT_URL, $url);
-//        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($curl, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); // 模拟用户使用的浏览器
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1); // 使用自动跳转
-        curl_setopt($curl, CURLOPT_AUTOREFERER, 1); // 自动设置Referer
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30); // 设置超时限制防止死循环
-        curl_setopt($curl, CURLOPT_HEADER, 0); // 显示返回的Header区域内容
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); // 获取的信息以文件流的形式返回
-
-        if ($https) {
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);// 对认证证书来源的检查
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);// 从证书中检查SSL加密算法是否存在
-        }
-        if (!empty ($data)) {
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        }
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($curl);
-        if (!$output) {
-            $error = curl_error($curl);
-            echo "错误原因: ".$error;
-        }
-        curl_close($curl);
-
-        return $output;
+        $this->getMaterialList();
     }
-
-    function https_request($url, $data = null)
-    {
-        return $this->http_request($url, $data, true);
-    }
-
-
-    //调取素材
-    public function actionGetMaterialList()
-    {
-        $access_toke = "6_z5DkdcQRjGnBOHeYiRlbViQ_er8BWEvB5fEuT4uqPcqWXlfkHjpRv8o0YzuT1TSTS6QF51PyGdF62oBxgE4-U8xclAxR4XQeLpGABphWdHZ77AjysFB01vl0JBJV7w_jnU1R05Y2V4EnJ6AfZYGfAGATSA";
-        $url         = "https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=" . $access_toke;
-        $data = ['type' => 'news', 'offset' => '0', 'count' => '20'];
-        $data        = json_encode($data, JSON_UNESCAPED_UNICODE);
-
-
-        $APPID = "wx14b4165730ea6547";
-        $APPSECRET = "4b8cda25ebc1898e4ec5b3014c64b5ca";
-        $url         = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$APPID&secret=$APPSECRET";
-        echo $url;
-        echo "<br/>";
-        $result      = $this->https_request($url);
-//        VarDumper::dump($result);
-        exit;
-    }
-
-
-
 
     //公众号设置
 
@@ -131,11 +70,6 @@ class WechatController extends Controller
     }
 
 
-    public function actionTest()
-    {
-        echo 'asdfasdf';
-    }
-
     public function responseMsg()
     {
         $postAtr = isset($GLOBALS['HTTP_RAW_POST_DATA']) ? $GLOBALS['HTTP_RAW_POST_DATA'] : file_get_contents("php://input");
@@ -163,51 +97,75 @@ class WechatController extends Controller
 
                 return $info;
             }
+
+            if (strtolower($postObj->Event) == 'click') {
+                if ($postObj->EventKey == 'aboutme') {
+                    $toUser   = $postObj->FromUserName;
+                    $fromUser = $postObj->ToUserName;
+                    $time     = time();
+                    $MsgType  = 'text';
+                    $Content  = "你好, 我是名phper";
+                    $template = "<xml><ToUserName><![CDATA[%s]]></ToUserName>
+                                <FromUserName><![CDATA[%s]]></FromUserName>
+                                <CreateTime>%s</CreateTime>
+                                <MsgType><![CDATA[%s]]></MsgType>
+                                <Content><![CDATA[%s]]></Content></xml>";
+                    return sprintf($template, $toUser, $fromUser, $time, $MsgType, $Content);
+
+                }
+            }
         }
 
         if (strtolower($postObj->MsgType) == 'text') {
 
-            if ($postObj->Content == 'aboutme') {
+            if ($postObj->Content == 'aboutmet') {
                 $toUser   = $postObj->FromUserName;
                 $fromUser = $postObj->ToUserName;
                 $time     = time();
                 $MsgType  = 'text';
                 $Content  = "你好, 我是火柴, 是一名phper, 如果有什么技术需求, 欢迎给我留言";
-                $template = "<xml>
-                                <ToUserName><![CDATA[%s]]></ToUserName>
+                $template = "<xml><ToUserName><![CDATA[%s]]></ToUserName>
                                 <FromUserName><![CDATA[%s]]></FromUserName>
                                 <CreateTime>%s</CreateTime>
                                 <MsgType><![CDATA[%s]]></MsgType>
-                                <Content><![CDATA[%s]]></Content>
-                                </xml>";
-
+                                <Content><![CDATA[%s]]></Content></xml>";
                 return sprintf($template, $toUser, $fromUser, $time, $MsgType, $Content);
+
             } elseif ($postObj->Content == 'tuwen1') {
                 $toUser   = $postObj->FromUserName;
                 $fromUser = $postObj->ToUserName;
                 return sprintf($this->TemplatePicText(), $toUser, $fromUser, time(), "news");
-            } else if ($postObj->Content == 'test') {
-
+            } else {
+                $toUser   = $postObj->FromUserName;
+                $fromUser = $postObj->ToUserName;
+                $time     = time();
+                $MsgType  = 'text';
+                $Content  = "你好, 谢谢关注, 欢迎给我留言";
+                $template = "<xml><ToUserName><![CDATA[%s]]></ToUserName>
+                                <FromUserName><![CDATA[%s]]></FromUserName>
+                                <CreateTime>%s</CreateTime>
+                                <MsgType><![CDATA[%s]]></MsgType>
+                                <Content><![CDATA[%s]]></Content></xml>";
+                return sprintf($template, $toUser, $fromUser, $time, $MsgType, $Content);
             }
         }
 
     }
 
 
-
     //创建菜单
     public function actionCreateItem()
     {
-        $access_toke = "6_z5DkdcQRjGnBOHeYiRlbViQ_er8BWEvB5fEuT4uqPcqWXlfkHjpRv8o0YzuT1TSTS6QF51PyGdF62oBxgE4-U8xclAxR4XQeLpGABphWdHZ77AjysFB01vl0JBJV7w_jnU1R05Y2V4EnJ6AfZYGfAGATSA";
+        $access_toke = $this->getWxAccessToken();
         $url         = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=$access_toke";
         $data        = [
             'button' => [
                 ['type' => 'view', 'name' => '火柴博客', 'url' => 'http://www.phpdx.me'],
-                ['type' => 'click', 'name' => '关于我', 'key' => 'aboutme']
+                ['type' => 'click', 'name' => '关于', 'key' => 'aboutme']
             ]
         ];
-        $data        = json_encode($data,JSON_UNESCAPED_UNICODE);
-        $result      = $this->http_request($url, $data);
+        $data        = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $result      = $this->https_request($url, $data);
 
         var_dump($result);
 
@@ -219,10 +177,6 @@ class WechatController extends Controller
     public function actionCreateMenu()
     {
 
-    }
-
-    public function getWxAccessToken()
-    {
     }
 
 
