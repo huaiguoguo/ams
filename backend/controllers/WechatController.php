@@ -35,7 +35,6 @@ class WechatController extends BackendController
     }
 
     //公众号设置
-
     public function actionSetwechat()
     {
         return $this->render('setwechat');

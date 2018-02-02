@@ -1,8 +1,12 @@
 <?php
+
 namespace frontend\controllers;
 
+use common\controller\FrontendController;
 use Yii;
 use yii\base\InvalidParamException;
+use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -16,7 +20,7 @@ use frontend\models\ContactForm;
 /**
  * Site controller
  */
-class SiteController extends Controller
+class SiteController extends FrontendController
 {
     /**
      * @inheritdoc
@@ -26,22 +30,22 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['logout', 'signup'],
+                'only'  => ['logout', 'signup'],
                 'rules' => [
                     [
                         'actions' => ['signup'],
-                        'allow' => true,
-                        'roles' => ['?'],
+                        'allow'   => true,
+                        'roles'   => ['?'],
                     ],
                     [
                         'actions' => ['logout'],
-                        'allow' => true,
-                        'roles' => ['@'],
+                        'allow'   => true,
+                        'roles'   => ['@'],
                     ],
                 ],
             ],
-            'verbs' => [
-                'class' => VerbFilter::className(),
+            'verbs'  => [
+                'class'   => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -55,11 +59,11 @@ class SiteController extends Controller
     public function actions()
     {
         return [
-            'error' => [
+            'error'   => [
                 'class' => 'yii\web\ErrorAction',
             ],
             'captcha' => [
-                'class' => 'yii\captcha\CaptchaAction',
+                'class'           => 'yii\captcha\CaptchaAction',
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
         ];
@@ -72,8 +76,70 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        $appid = $this->APPID;
+        $url   = "https://open.weixin.qq.com/connect/oauth2/authorize";
+
+        $redirect_uri = urlencode(Url::to(['site/test'], true));
+        $url          .= "?appid=$appid&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
+
+        $response = $this->redirect($url);
+
+        var_dump($response);
+
         return $this->render('index');
     }
+
+
+    //在这里获取code   再拿code 去获取网页授权access_token,openid,expires_in
+    //{ "access_token":"ACCESS_TOKEN",
+    //"expires_in":7200,
+    //"refresh_token":"REFRESH_TOKEN",
+    //"openid":"OPENID",
+    //"scope":"SCOPE" }
+    public function actionTest()
+    {
+        $code = Yii::$app->request->get('code');
+
+        $url    = "https://api.weixin.qq.com/sns/oauth2/access_token";
+        $appid  = $this->APPID;
+        $secret = $this->APPSECRET;
+        $url    .= "?appid=$appid&secret=$secret&code=$code&grant_type=authorization_code";
+
+        $result = $this->https_request($url);
+
+        var_dump($result);
+        exit;
+
+        return $this->render('test');
+    }
+
+    //刷新access_token
+    //由于access_token拥有较短的有效期，
+    //当access_token超时后，可以使用refresh_token进行刷新，refresh_token有效期为30天，
+    //当refresh_token失效之后，需要用户重新授权
+    //{ "access_token":"ACCESS_TOKEN",
+    //"expires_in":7200,
+    //"refresh_token":"REFRESH_TOKEN",
+    //"openid":"OPENID",
+    //"scope":"SCOPE" }
+    public function actionTest2()
+    {
+        $appid = $this->APPID;
+        $url   = "https://api.weixin.qq.com/sns/oauth2/refresh_token";
+        $url   .= "?appid=$appid&grant_type=refresh_token&refresh_token=REFRESH_TOKEN";
+    }
+
+
+    //第四步：拉取用户信息(需scope为 snsapi_userinfo)
+    //如果网页授权作用域为snsapi_userinfo，则此时开发者可以通过access_token和openid拉取用户信息了
+    public function actionGetuserinfo()
+    {
+        $url = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
+
+        $result = $this->https_request($url);
+
+    }
+
 
     /**
      * Logs in a user.
