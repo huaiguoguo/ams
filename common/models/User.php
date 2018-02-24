@@ -19,7 +19,19 @@ use yii\web\IdentityInterface;
  * @property integer $status
  * @property integer $created_at
  * @property integer $updated_at
- * @property string $password write-only password
+ * @property string $password 
+ * @property string $access_token 
+ * @property string $expires_in 
+ * @property string $refresh_token 
+ * @property string $openid 
+ * @property string $nickname 
+ * @property string $sex 
+ * @property string $province
+ * @property string $city 
+ * @property string $country 
+ * @property string $headimgurl 
+ * @property string $privilege 
+ * @property string $unionid 
  */
 class User extends ActiveRecord implements IdentityInterface
 {

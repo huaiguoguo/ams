@@ -30,7 +30,11 @@ return [
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
-                    'levels' => ['error', 'warning'],
+                    'levels' => ['error', 'warning', 'info'],
+                    'exportInterval' => 1,
+                    'maxFileSize'    => 1024 * 15,  //设置文件大小，以k为单位
+                    'logFile'        => '@runtime/logs/app.log', //文件名 命名方式
+                    'enableDatePrefix' => true
                 ],
             ],
         ],

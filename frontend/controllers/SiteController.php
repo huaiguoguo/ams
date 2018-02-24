@@ -3,6 +3,7 @@
 namespace frontend\controllers;
 
 use common\controller\FrontendController;
+use common\models\User;
 use Yii;
 use yii\base\InvalidParamException;
 use yii\helpers\Html;
@@ -47,7 +48,7 @@ class SiteController extends FrontendController
             'verbs'  => [
                 'class'   => VerbFilter::className(),
                 'actions' => [
-                    'logout' => ['post'],
+                    'logout' => ['get','post'],
                 ],
             ],
         ];
@@ -69,6 +70,28 @@ class SiteController extends FrontendController
         ];
     }
 
+
+
+
+    //首页内容
+    public function actionOrder()
+    {
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * Displays homepage.
      *
@@ -76,17 +99,20 @@ class SiteController extends FrontendController
      */
     public function actionIndex()
     {
-        $appid = $this->APPID;
-        $url   = "https://open.weixin.qq.com/connect/oauth2/authorize";
-
+//        echo yii::t("app", "invalid{name}",['name'=>'数据']);
+//        yii::error("invalid{name}", 'app');
+//        exit;
+        if (!Yii::$app->user->isGuest){
+            return $this->redirect(['user/haha']);
+        }
+        $appid        = $this->APPID;
+        $url          = "https://open.weixin.qq.com/connect/oauth2/authorize";
         $redirect_uri = urlencode(Url::to(['site/test'], true));
-        $url          .= "?appid=$appid&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
+        $url          .= "?appid=$appid&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&state=haha#wechat_redirect";
 
         $response = $this->redirect($url);
 
-        var_dump($response);
-
-        return $this->render('index');
+//        return $this->render('index');
     }
 
 
@@ -98,19 +124,61 @@ class SiteController extends FrontendController
     //"scope":"SCOPE" }
     public function actionTest()
     {
-        $code = Yii::$app->request->get('code');
+        $code             = Yii::$app->request->get('code');
+        $url              = "https://api.weixin.qq.com/sns/oauth2/access_token";
+        $appid            = $this->APPID;
+        $secret           = $this->APPSECRET;
+        $url              .= "?appid=$appid&secret=$secret&code=$code&grant_type=authorization_code";
+        $result           = $this->https_request($url);
+        $web_access_token = json_decode($result, true);
 
-        $url    = "https://api.weixin.qq.com/sns/oauth2/access_token";
-        $appid  = $this->APPID;
-        $secret = $this->APPSECRET;
-        $url    .= "?appid=$appid&secret=$secret&code=$code&grant_type=authorization_code";
+        $access_token  = $web_access_token['access_token'];
+        $expires_in    = $web_access_token['expires_in'];
+        $user_openid   = $web_access_token['openid'];
+        $refresh_token = $web_access_token['refresh_token'];
 
-        $result = $this->https_request($url);
+        if ($user_openid) {
+            $user = User::find()->where(['openid' => $user_openid])->one();
+            if ($user) {
+                Yii::$app->user->login($user,  3600 * 24 * 30);
+                return $this->redirect(['user/index']);
+            }
+        }
 
-        var_dump($result);
-        exit;
+        //根据access_token 获得用户的信息
+        $url                 = "https://api.weixin.qq.com/sns/userinfo?access_token=$access_token&openid=$user_openid&lang=zh_CN";
+        $weixin_userinfo     = $this->https_request($url);
+        $weixin_userinfo_arr = json_decode($weixin_userinfo, true);
+//        var_dump($weixin_userinfo_arr);
+//        exit;
 
-        return $this->render('test');
+        $user                = new User();
+        $user->access_token  = $access_token;
+        $user->expires_in    = $expires_in;
+        $user->refresh_token = $refresh_token;
+        $user->openid        = $weixin_userinfo_arr['openid'];
+        $user->status        = 10;
+        $user->username      = $weixin_userinfo_arr['nickname'];
+        $user->nickname      = $weixin_userinfo_arr['nickname'];
+        $user->sex           = $weixin_userinfo_arr['sex'];
+        $user->province      = $weixin_userinfo_arr['province'];
+        $user->city          = $weixin_userinfo_arr['city'];
+        $user->country       = $weixin_userinfo_arr['country'];
+        $user->headimgurl    = $weixin_userinfo_arr['headimgurl'];
+        if (isset($weixin_userinfo_arr['privilege'])) {
+            $user->privilege = json_encode($weixin_userinfo_arr['privilege']);
+        }
+        if (isset($weixin_userinfo_arr['unionid'])) {
+            $user->unionid = $weixin_userinfo_arr['unionid'];
+        }
+        $user->created_at = time();
+        if ($user->save()) {
+            $user = User::find()->where(['openid' => $user_openid])->one();
+            if ($user) {
+                Yii::$app->user->login($user,  3600 * 24 * 30);
+                return $this->redirect(['user/test']);
+            }
+        }
     }
 
     //刷新access_token
