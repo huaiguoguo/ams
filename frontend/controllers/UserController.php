@@ -23,25 +23,32 @@ class UserController extends FrontendController
 
     public function actionHaha()
     {
-//        var_dump(Yii::$app->user->identity->username);
+        echo "这是用户第一次登录的时候, 登录之后会跳到这个页面";
+        var_dump(Yii::$app->user->identity->username);
         exit;
     }
 
     //个人中心主页
     public function actionIndex()
     {
-        echo "adsfasd";
-        var_dump($this->user_info);
-        exit;
 
-        return $this->render('index');
+//        $this->view->title = "asdfasd";
+        var_dump("这是用户已经登录过, 然后跳转到的页面");
+//        var_dump($this->user_info);
+        $data['user'] = $this->user_info;
+        return $this->render('index', $data);
     }
 
     //我的订单
-    public function actionTest()
+    public function actionOrder()
     {
         $uid                = $this->user_info->getId();
-        $order              = Order::find()->where(['uid' => $uid])->all();
+        $where['uid'] = $uid;
+        $type = Yii::$app->request->get("type");
+        if ($type){
+            $where['type'] = $type;
+        }
+        $order              = Order::find()->where($where)->all();
         $data['order_list'] = $order;
 
         return $this->render('order', $data);
@@ -62,7 +69,8 @@ class UserController extends FrontendController
     {
         $uid  = $this->user_info->getId();
         $cart = Cart::find()->where(['uid' => $uid])->all();
-
+        $data['cart_list'] = $cart;
+        return $this->render('favorite', $data);
     }
 
     //收货地址管理

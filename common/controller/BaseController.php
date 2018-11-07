@@ -8,25 +8,23 @@
 
 namespace common\controller;
 
-
 use Yii;
 use yii\base\Module;
 use yii\web\Controller;
+use common\helpers\VarDumper;
 
 class BaseController extends Controller
 {
-
-    protected $TOKEN     = "huochai";
+    protected $TOKEN     = "haowai";
     protected $APPID     = "wx14b4165730ea6547";
     protected $APPSECRET = "4b8cda25ebc1898e4ec5b3014c64b5ca";
     protected $db;
 
-    public function __construct($id, Module $module, array $config = [])
-    {
-        parent::__construct($id, $module, $config);
-        $this->db = Yii::$app->db;
-    }
-
+    // public function __construct($id, Module $module, array $config = [])
+    // {
+    //     parent::__construct($id, $module, $config);
+    //     $this->db = Yii::$app->db;
+    // }
 
     //验证签名
     public function checkSignature()
@@ -64,7 +62,6 @@ class BaseController extends Controller
         $data   = json_encode($map, JSON_UNESCAPED_UNICODE);
         $result = $this->https_request($url, $data);
         $result = json_decode($result);
-        echo "<pre>";
         VarDumper::dump($result);
         exit;
 
@@ -139,6 +136,7 @@ class BaseController extends Controller
     public function msgTypeCase($postObj)
     {
         $response = '';
+        Yii::error($postObj, 'wechat');
         $MsgType  = strtolower($postObj->MsgType);
         switch ($MsgType) {
             case "event":

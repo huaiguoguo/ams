@@ -81,17 +81,6 @@ class SiteController extends FrontendController
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Displays homepage.
      *
@@ -103,12 +92,13 @@ class SiteController extends FrontendController
 //        yii::error("invalid{name}", 'app');
 //        exit;
         if (!Yii::$app->user->isGuest){
-            return $this->redirect(['user/haha']);
+            return $this->redirect(['user/index']);
         }
         $appid        = $this->APPID;
         $url          = "https://open.weixin.qq.com/connect/oauth2/authorize";
-        $redirect_uri = urlencode(Url::to(['site/test'], true));
-        $url          .= "?appid=$appid&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&state=haha#wechat_redirect";
+        $redirect_uri = urlencode(Url::to(['site/wechat-login'], true));
+        //  snsapi_userinfo
+        $url          .= "?appid=$appid&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&state=test#wechat_redirect";
 
         $response = $this->redirect($url);
 
@@ -122,7 +112,7 @@ class SiteController extends FrontendController
     //"refresh_token":"REFRESH_TOKEN",
     //"openid":"OPENID",
     //"scope":"SCOPE" }
-    public function actionTest()
+    public function actionWechatLogin()
     {
         $code             = Yii::$app->request->get('code');
         $url              = "https://api.weixin.qq.com/sns/oauth2/access_token";
@@ -176,7 +166,7 @@ class SiteController extends FrontendController
             $user = User::find()->where(['openid' => $user_openid])->one();
             if ($user) {
                 Yii::$app->user->login($user,  3600 * 24 * 30);
-                return $this->redirect(['user/test']);
+                return $this->redirect(['user/haha']);
             }
         }
     }
