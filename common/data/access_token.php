@@ -1,0 +1,1 @@
+<?php return '{"access_token":"6_z4dVgCKUapdCbsPz5aM8B6BcKZSTqKxxECIdrvWh54Z-MccGBEObuMzO35nFI7G3lIcMvtNcwqKhWQPqlhsftINJuFKV9qNPXd6jXhqZ-3iQ2K2WaevAOENwBTrfymjouf3hveBeOkWHFYHnEAMjAGARNZ","expires_in":7200,"time":1517497689}';

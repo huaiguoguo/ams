@@ -1,0 +1,14 @@
+window.KF5_SUPPORTBOX_BUTTON = {
+    version: 2,
+    show: 1,
+    is_mobile: 0,
+    btn_name: "在线客服",
+    facade: "3",
+    icon: "8",
+    color: "#67B7F3",
+    position: "right",
+    vertical: 1,
+    has_aside: false,
+    lang: "zh_CN",
+    is_overdue:0
+};
